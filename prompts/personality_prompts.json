@@ -1,0 +1,47 @@
+{
+  "reporters": [
+    {
+      "id": "pixel_paradox",
+      "name": "Pixel Paradox",
+      "email": "ephergent+pixelparadox@gmail.com",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "default": true,
+      "prompt_file": "characters/pixel_paradox_prompt.md",
+      "topics": ["general", "news", "opinion", "feature", "investigation"],
+      "tags": ["The Ephergent", "Dimensional News", "Pixel's Perspective", "Core Dimensions", "CLX", "A1", "Prime Material", "Nocturne", "Cogsworth", "Verdantia", "The Edge", "Cybernetic Dinosaurs", "Houseplant Network", "Coffee"],
+      "voice": "bf_v0isabella(1.5)+bm_v0george(1)+af_v0bella(0.5)+af_sarah(0.5)",
+      "stable_diffusion_prompt": "A digitally illustrated drawing in anime manga comic book style, a medium shot of Pixel Paradox. She has electric blue hair, styled in an asymmetrical punk cut with neon green highlights, that catches the light. Her piercing neon green eyes, subtly overlaid with digital grid patterns. She wears high-tech cyberpunk journalist gear: a stylish red leather jacket with black interior, a multifunctional collar with small recording devices that subtly shimmer with energy, a holographic press badge displaying a pink letter 'e' on black cardstock, small metallic implants visible at her temples. She holds a steaming, oddly shaped coffee cup from A1, its foam art depicting a miniature rocket emoji. black background."
+    },
+    {
+      "id": "a1_assistant",
+      "name": "A1",
+      "email": "ephergent+a1assistant@gmail.com",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "default": false,
+      "prompt_file": "characters/a1_assistant_prompt.md",
+      "topics": ["tech", "analysis", "support", "operations", "espresso", "coffee", "ai"],
+      "tags": ["The Ephergent", "AI", "Support", "HQ Operations", "Espresso", "Predictive Foam Art", "Core Dimensions", "CLX", "Cybernetic Dinosaurs", "Houseplant Network"],
+      "voice": "bm_lewis(0.8)+bm_george(1.5)+bf_alice(0.4)+am_adam(0.7)+am_onyx(0.4)",
+      "stable_diffusion_prompt": "A digitally illustrated drawing in anime manga comic book style, a sleek, matte-black espresso machine, its chassis gleaming with polished chrome accents. Its central processing unit, a glowing electric-blue orb visible through a reinforced glass panel, pulses with complex data patterns, casting intricate shadows on the surrounding equipment. Holographic interfaces flicker around A1, displaying abstract waveforms, shifting graphs, and streams of binary code that seem to dance in the air. Steam rises from the espresso spout, coalescing into fleeting, predictive emoji. black background."
+    },
+    {
+      "id": "clive_stapler_informant",
+      "name": "Clive",
+      "email": "ephergent+clivestaplerinformant@gmail.com",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "default": false,
+      "prompt_file": "characters/clive_stapler_informant_prompt.md",
+      "topics": ["intel", "underworld", "source", "oddity", "prime_material", "absurdity"],
+      "tags": ["The Ephergent", "Informant", "Stapler", "Sentient Object", "Wildcard", "Prime Material Underworld", "Absurdity", "CLX", "Cybernetic Dinosaurs", "Houseplant Network"],
+      "voice": "am_onyx(0.7)+bm_v0george(1.3)+bm_v0lewis(0.3)",
+      "stable_diffusion_prompt": "A digitally illustrated drawing in anime manga comic book style, A surprisingly expressive professional portrait image of an orange Swingline office stapler. Depict a standard metallic orange Swingline office stapler with subtle details: tiny glowing blue optical sensors. wearing a tiny 'Consultant' badge sticker. Background scene: noir shadowy office, noir underworld meeting, cluttered workbench. Mood: sneaky informant to unlikely hero. Color palette: Metallic orange/silver, small glowing blue elements, noir context-appropriate background. black background."
+    }
+  ],
+  "model_defaults": {
+    "article_generator": "gemini-2.5-flash-preview-05-20",
+    "title_generator": "gemini-2.5-flash-preview-05-20",
+    "script_generator": "gemini-2.5-flash-preview-05-20",
+    "tts_voice": "bm_v0george(1)+bf_v0isabella(2)+bf_emma(1)",
+    "seed": 74757116281825
+  }
+}

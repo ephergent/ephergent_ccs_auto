@@ -1,0 +1,87 @@
+# -----------------------------------------------------------------------------
+# Ephergent Content Creation System Environment Variables
+# -----------------------------------------------------------------------------
+# Copy this file to .env and fill in your actual values.
+# Do not commit the .env file to version control.
+
+# --- Core Settings ---
+# Selects the default reporter personality if none is specified [Use the ID from the reporter list]
+REPORTER=pixel_paradox
+
+# Default system path for the Ephergent Universe prompt
+EPHERGENT_SYSTEM_PROMPT_PATH="/YOUR_SYSTEM_PATH/prompts/ephergent_universe_prompt.md"
+
+# --- API Keys ---
+# Google Gemini API Key for text generation (article, title, summary, image prompts)
+GEMINI_MODEL=gemini-2.0-flash
+GEMINI_API_KEY=YOUR_API_KEY
+
+# --- Service URLs ---
+# URL for your running ComfyUI instance (for image generation)
+COMFYUI_URL="http://comfyui.example.test"
+COMFYUI_SEED=42
+
+# URL for your running Kokoro TTS instance (if using for audio generation)
+KOKORO_URL="http://127.0.0.1:8880/v1"
+
+# --- Blog Settings ---
+# The domain of the blog (used in the title and as a subdomain for the blog URL)
+BLOG_URL="https://ephergent.com"
+
+# --- File Paths ---
+# Base directory for Pelican blog content output (Required for exporting)
+PELICAN_CONTENT_DIR="/YOUR_SYSTEM_PATH/blog/content"
+
+# Base directory for Pelican blog project (Required for git operations)
+PELICAN_PROJECT_DIR="/YOUR_SYSTEM_PATH/blog/"
+
+# --- Social Media API Credentials (Optional - only if POST_TO_SOCIAL=true) ---
+# Bluesky
+BLUESKY_USERNAME="you@example.com"
+BLUESKY_PASSWORD="YOUR_API_KEY"
+
+# Warpcast (Farcaster) - Requires mnemonic phrase
+MNEMONIC_ENV_VAR="YOUR_API_KEY"
+
+# Youtube API Credentials
+YOUTUBE_CLIENT_SECRET_FILE='client_secret.json'
+YOUTUBE_TOKEN_FILE='token.json'
+YOUTUBE_CATEGORY_ID="24" # See https://developers.google.com/youtube/v3/docs/videoCategories/list
+YOUTUBE_PRIVACY_STATUS="unlisted"
+
+# --- Feature Flags ---
+# Set to 'true' to enable posting to social media platforms
+POST_TO_SOCIAL=true
+
+# Mailgun api key to send to mail list
+SEND_NEWSLETTER=true
+MAILGUN_API_KEY=YOUR_API_KEY
+MAILGUN_API_URL="https://api.mailgun.net/v3/YOUR_DOMAIN/messages"
+MAILGUN_FROM="The postmaster <postmaster@YOUR_DOMAIN>"
+MAILGUN_TO="The maillist <no-reply@YOUR_DOMAIN>"
+MAILGUN_TEMPLATE="YOUR_MAILGUN_TEMPLATE"
+MAILGUN_SUBJECT="YOUR_MAILGUN_SUBJECT"
+
+# Set to 'true' to enable pushing changes to git repository (requires PELICAN_PROJECT_DIR to be set)
+PUSH_TO_GIT=True
+GIT_BRANCH=main # Optional: Specify branch to push to (defaults to 'main')
+
+# Set to 'true' (default) to enable archiving of generated artifacts into the 'archive/' directory
+ARCHIVE_ARTIFACTS=true
+
+# Set to 'true' to enable cleanup of temporary files in the output directory after processing
+CLEANUP_ARTIFACTS=true
+
+# Set to 'true' (default) or 'false' to enable/disable fade-in/out effects on generated audio
+ENABLE_AUDIO_EFFECTS=true
+
+# Optional: Comma-separated list of steps to skip during workflow execution
+# Valid steps: audio, git, social, archive, export, image, feature_image, article_image
+# Example to test: SKIP_STEPS=export,git,social,archive
+# Example to skip all steps in order:
+#SKIP_STEPS=topic,article,image,feature_image,article_image,audio,export,git,social,archive
+# Skip exporting and git steps for testing
+# SKIP_STEPS=export,git,social,archive
+
+# Embedding model for vector database (used by archiver.py)
+EMBEDDING_MODEL_NAME=all-mpnet-base-v2

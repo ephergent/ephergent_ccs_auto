@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="format-detection" content="telephone=no"/>
+  <title>The Ephergent - Daily Dimensional Dispatch</title>
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <!--<![endif]-->
+  <style type="text/css">
+    /* Base Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      -webkit-text-size-adjust: 100% !important;
+      -ms-text-size-adjust: 100% !important;
+      -webkit-font-smoothing: antialiased !important;
+      background-color: #000000;
+    }
+    img { border: 0 !important; outline: none !important; }
+    p { Margin: 0px !important; Padding: 0px !important; }
+    table { border-collapse: collapse; mso-table-lspace: 0px; mso-table-rspace: 0px; }
+    td, a, span { border-collapse: collapse; mso-line-height-rule: exactly; }
+    .ExternalClass * { line-height: 100%; }
+
+    /* Custom Colors */
+    .pink-text { color: #F12CA5 !important; }
+    .white-text { color: #FFFFFF !important; }
+    .gray-text { color: #AAAAAA !important; }
+    .dark-gray-text { color: #666666 !important; }
+
+    /* Custom Elements */
+    .zine-box {
+      border: 2px solid #F12CA5 !important;
+      box-shadow: 5px 5px 0 #F12CA5 !important;
+    }
+    .btn-pink {
+      background-color: #F12CA5 !important;
+      color: #000000 !important;
+      border-radius: 0 !important;
+      font-family: 'B612 Mono', monospace !important;
+      font-weight: bold !important;
+    }
+    .btn-outline-pink {
+      background-color: transparent !important;
+      border: 2px solid #F12CA5 !important;
+      color: #F12CA5 !important;
+      border-radius: 0 !important;
+      font-family: 'B612 Mono', monospace !important;
+      font-weight: bold !important;
+    }
+
+    /* Responsive */
+    @media only screen and (max-width: 640px) {
+      .em_main_table { width: 100% !important; }
+      .em_wrapper { width: 100% !important; }
+      .em_hide { display: none !important; }
+      .em_aside10 { padding: 0 10px !important; }
+      .em_h20 { height: 20px !important; font-size: 1px !important; line-height: 1px !important; }
+      .em_h10 { height: 10px !important; font-size: 1px !important; line-height: 1px !important; }
+      .em_font_22 { font-size: 22px !important; line-height: 25px !important; }
+      .em_font_18 { font-size: 18px !important; line-height: 22px !important; }
+      u + .em_body .em_full_wrap { width: 100% !important; width: 100vw !important; }
+      .em_full_img { width: 100% !important; height: auto !important; max-width: none !important; }
+    }
+  </style>
+</head>
+<body class="em_body" style="margin:0px auto; padding:0px; background-color:#000000;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="em_full_wrap" align="center" bgcolor="#000000">
+    <tr>
+      <td align="center" valign="top">
+        <table align="center" width="650" border="0" cellspacing="0" cellpadding="0" class="em_main_table" style="width:650px; table-layout:fixed; background-color:#000000;">
+          <!-- Header -->
+          <tr>
+            <td align="center" valign="top" style="padding:0 25px;" class="em_aside10">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+                <tr><td height="30" style="height:30px;" class="em_h20">&nbsp;</td></tr>
+                <tr>
+                  <td align="center" valign="top" style="font-family: 'B612 Mono', 'Courier New', Courier, monospace; font-size: 36px; line-height: 40px; color:#F12CA5; font-weight:700; text-transform: uppercase;">
+                    THE EPHERGENT
+                  </td>
+                </tr>
+                <tr><td height="10" style="height:10px;" class="em_h10">&nbsp;</td></tr>
+                <tr>
+                  <td align="center" valign="top" style="font-family: 'Montserrat', Arial, sans-serif; font-size: 16px; line-height: 22px; color:#FFFFFF;">
+                    Daily Dimensional Dispatch
+                  </td>
+                </tr>
+                <tr><td height="5" style="height:5px;">&nbsp;</td></tr>
+                <tr>
+                  <td align="center" valign="top" style="font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; line-height: 18px; color:#AAAAAA;">
+                    {{ newsletter_date }} <!-- Date of the published article -->
+                  </td>
+                </tr>
+                <tr><td height="20" style="height:20px;" class="em_h20">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+          <!-- End Header -->
+
+          <!-- === START ARTICLE BLOCK === -->
+          <!-- This block will be populated with the single article being published today -->
+          <tr>
+            <td align="center" valign="top" style="padding:0 25px;" class="em_aside10">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" bgcolor="#1a1a1a" style="background-color:#1a1a1a; border: 2px solid #F12CA5; border-radius: 0px; overflow: hidden;">
+                <!-- Image -->
+                <!-- Check if feature image URL exists -->
+                {{#if article_feature_image_url}}
+                <tr>
+                  <td valign="top" align="center">
+                    <!-- Ensure the image URL is absolute and hosted -->
+                    <a href="{{ article_url }}" target="_blank" style="text-decoration:none;">
+                      <img src="{{ article_feature_image_url }}" width="600" class="em_full_img" alt="{{ article_title }}" border="0" style="display:block; max-width:600px; width:100%; font-family:'Montserrat', Arial, sans-serif; font-size:17px; line-height:20px; color:#FFFFFF; font-weight:bold; border-bottom: 1px solid #F12CA5;" />
+                    </a>
+                  </td>
+                </tr>
+                {{/if}}
+                <!-- Content -->
+                <tr>
+                  <td valign="top" align="left" style="padding: 20px 25px;" class="em_aside10">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" align="left">
+                      <!-- Optional: Category/Author -->
+                      <!--
+                      <tr>
+                        <td align="left" valign="top" style="font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; line-height: 18px; color:#AAAAAA; text-transform: uppercase; padding-bottom: 5px;">
+                          {{ article_category }} | Filed by: {{ article_author }}
+                        </td>
+                      </tr>
+                      -->
+                      <tr>
+                        <td class="em_font_22" align="left" valign="top" style="font-family: 'B612 Mono', 'Courier New', Courier, monospace; font-size: 26px; line-height: 30px; color:#FFFFFF; font-weight:700;">
+                          {{ article_title }}
+                        </td>
+                      </tr>
+                      <tr><td height="15" style="height:15px;">&nbsp;</td></tr>
+                      <tr>
+                        <td align="left" valign="top" style="font-family: 'Montserrat', Arial, sans-serif; font-size: 16px; line-height: 24px; color:#DDDDDD;">
+                          {{ article_summary }}
+                        </td>
+                      </tr>
+                      <tr><td height="20" style="height:20px;" class="em_h20">&nbsp;</td></tr>
+                      <!-- Read More Button -->
+                      <tr>
+                        <td align="left" valign="top">
+                          <table width="160" border="0" cellspacing="0" cellpadding="0" align="left" style="width:160px; background-color:#F12CA5; border-radius:0px;" bgcolor="#F12CA5">
+                            <tr>
+                              <td height="40" align="center" valign="middle" style="font-family: 'B612 Mono', 'Courier New', Courier, monospace; font-size: 14px; color:#000000; font-weight:bold; height:40px;">
+                                <a href="{{ article_url }}" target="_blank" style="text-decoration:none; color:#000000; line-height:40px; display:block; width: 100%;">READ MORE &raquo;</a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr><td height="10" style="height:10px;">&nbsp;</td></tr> <!-- Padding at bottom inside the box -->
+              </table>
+            </td>
+          </tr>
+          <tr><td height="20" style="height:20px;" class="em_h20">&nbsp;</td></tr>
+          <!-- === END ARTICLE BLOCK === -->
+
+          <!-- Spacer before footer -->
+          <tr><td height="10" style="height:10px;" class="em_h10">&nbsp;</td></tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" valign="top" style="padding:0 25px;" class="em_aside10">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" style="border-top: 1px solid #F12CA5;">
+                <tr><td height="30" style="height:30px;" class="em_h20">&nbsp;</td></tr>
+                <tr>
+                  <td align="center" valign="top" style="font-family: 'B612 Mono', 'Courier New', Courier, monospace; font-size: 12px; line-height: 16px; color:#AAAAAA;">
+                    THE EPHERGENT™ | Reality Optional, Truth Inevitable<br />
+                    Est. All Timelines | Approved by Telepathic Houseplants<br />
+                    Pay with Crystallized Laughter
+                  </td>
+                </tr>
+                <tr><td height="15" style="height:15px;">&nbsp;</td></tr>
+                <!-- Social Links Placeholder - Add icons/links if needed -->
+                <!-- <tr>
+                  <td align="center" valign="top">
+                    <table border="0" cellspacing="0" cellpadding="0" align="center">
+                      <tr>
+                        <td width="30" style="width:30px;" align="center" valign="middle"><a href="#" target="_blank" style="text-decoration:none;"><img src="[URL_TO_ICON]" width="24" height="24" alt="Social" border="0" /></a></td>
+                        <td width="10" style="width:10px;">&nbsp;</td>
+                        <td width="30" style="width:30px;" align="center" valign="middle"><a href="#" target="_blank" style="text-decoration:none;"><img src="[URL_TO_ICON]" width="24" height="24" alt="Social" border="0" /></a></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr><td height="15" style="height:15px;">&nbsp;</td></tr> -->
+                <tr>
+                  <td align="center" valign="top" style="font-family: 'Montserrat', Arial, sans-serif; font-size: 11px; line-height: 16px; color:#666666;">
+                    &copy; The Ephergent. All rights reserved.<br />
+                    You are receiving this because you subscribed to dimensional updates.
+                  </td>
+                </tr>
+                <tr><td height="5" style="height:5px;">&nbsp;</td></tr>
+                <tr>
+                  <td align="center" valign="top" style="font-family: 'Montserrat', Arial, sans-serif; font-size: 11px; line-height: 16px; color:#666666;">
+                    <a href="%unsubscribe_url%" target="_blank" style="color:#F12CA5; text-decoration:underline;">Unsubscribe</a> | <a href="https://ephergent.com" target="_blank" style="color:#F12CA5; text-decoration:underline;">Visit Website</a>
+                  </td>
+                </tr>
+                <tr><td height="30" style="height:30px;" class="em_h20">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+          <!-- End Footer -->
+        </table>
+      </td>
+    </tr>
+  </table>
+  <!-- Full wrap -->
+  <div class="em_hide" style="white-space: nowrap; display: none; font-size:0px; line-height:0px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+</body>
+</html>

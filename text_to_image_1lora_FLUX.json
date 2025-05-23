@@ -1,0 +1,166 @@
+{
+  "5": {
+    "inputs": {
+      "width": 1344,
+      "height": 768,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": "A digitally illustrated drawing in anime manga comic book style, a medium shot of Pixel Paradox in the bustling, glitching newsroom of The Ephergent headquarters in Prime Material. She has electric blue hair, styled in an asymmetrical punk cut with neon green highlights, catching the light from the flickering holographic displays. Her piercing neon green eyes, subtly overlaid with digital grid patterns, dart around, taking in the chaotic scene. She wears high-tech cyberpunk journalist gear: a multifunctional collar with small recording devices that subtly shimmer with energy, a holographic press badge displaying a pink letter 'e' on black cardstock, small metallic implants visible at her temples. She holds a steaming, oddly shaped coffee cup from A1, its foam art depicting a miniature, swirling galaxy. The scene background includes other reporters, glitching holographic screens, and floating debris due to a gravity reversal.",
+      "clip": [
+        "37",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "PROMPT"
+    }
+  },
+  "8": {
+    "inputs": {
+      "samples": [
+        "30",
+        0
+      ],
+      "vae": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "10": {
+    "inputs": {
+      "vae_name": "flux_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "30": {
+    "inputs": {
+      "seed": 587398846072684,
+      "steps": 32,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "37",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "31",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "31": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "37",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "33": {
+    "inputs": {
+      "filename_prefix": "ephergent",
+      "filename_keys": "",
+      "foldername_prefix": "blog_images",
+      "foldername_keys": "",
+      "delimiter": "-",
+      "save_job_data": "disabled",
+      "job_data_per_image": false,
+      "job_custom_text": "",
+      "save_metadata": false,
+      "counter_digits": 3,
+      "counter_position": "last",
+      "one_counter_per_folder": true,
+      "image_preview": true,
+      "output_ext": ".jpg",
+      "quality": 90,
+      "named_keys": false,
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveImageExtended",
+    "_meta": {
+      "title": "💾 Save Image Extended 2.83"
+    }
+  },
+  "37": {
+    "inputs": {
+      "lora_name": "FLUX/Comic book opus 3.safetensors",
+      "strength_model": 0.7000000000000002,
+      "strength_clip": 0.7000000000000002,
+      "prompt": "",
+      "example": "[none]",
+      "model": [
+        "39",
+        0
+      ],
+      "clip": [
+        "41",
+        0
+      ]
+    },
+    "class_type": "LoraLoader|pysssss",
+    "_meta": {
+      "title": "Lora Loader 🐍"
+    }
+  },
+  "39": {
+    "inputs": {
+      "ckpt_name": "FLUX/flux1-dev-fp8.safetensors",
+      "prompt": "",
+      "example": "[none]"
+    },
+    "class_type": "CheckpointLoader|pysssss",
+    "_meta": {
+      "title": "Checkpoint Loader 🐍"
+    }
+  },
+  "41": {
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "t5xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "flux",
+      "device": "default"
+    },
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "DualCLIPLoader"
+    }
+  }
+}

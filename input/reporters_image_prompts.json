@@ -1,0 +1,16 @@
+{
+  "reporters": [
+    {
+      "id": "pixel_paradox",
+      "prompt": "A digitally illustrated drawing in anime manga comic book style, a medium shot of Pixel Paradox. She has electric blue hair, styled in an asymmetrical punk cut with neon green highlights, that catches the light. Her piercing neon green eyes, subtly overlaid with digital grid patterns. She wears high-tech cyberpunk journalist gear: a stylish red leather jacket with black interior, a multifunctional collar with small recording devices that subtly shimmer with energy, a holographic press badge displaying a pink letter 'e' on black cardstock, small metallic implants visible at her temples. She holds a steaming, oddly shaped coffee cup from A1, its foam art depicting a miniature rocket emoji. black background."
+    },
+    {
+      "id": "a1_assistant",
+      "prompt": "A digitally illustrated drawing in anime manga comic book style, a sleek, matte-black espresso machine, its chassis gleaming with polished chrome accents. Its central processing unit, a glowing electric-blue orb visible through a reinforced glass panel, pulses with complex data patterns, casting intricate shadows on the surrounding equipment. Holographic interfaces flicker around A1, displaying abstract waveforms, shifting graphs, and streams of binary code that seem to dance in the air. Steam rises from the espresso spout, coalescing into fleeting, predictive emoji. black background."
+    },
+    {
+      "id": "clive_stapler_informant",
+      "prompt": "A digitally illustrated drawing in anime manga comic book style, A surprisingly expressive professional portrait image of an orange Swingline office stapler. Depict a standard metallic orange Swingline office stapler with subtle details: tiny glowing blue optical sensors. wearing a tiny 'Consultant' badge sticker. Background scene: noir shadowy office, noir underworld meeting, cluttered workbench. Mood: sneaky informant to unlikely hero. Color palette: Metallic orange/silver, small glowing blue elements, noir context-appropriate background.. black background."
+    }
+  ]
+}
