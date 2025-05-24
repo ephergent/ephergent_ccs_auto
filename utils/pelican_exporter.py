@@ -185,8 +185,8 @@ def format_story_markdown(
                 article_image_path_pelican = f"/{PELICAN_IMAGES_SUBDIR}/{img_filename}"
                 image_html = (
                     f'<figure>\n'
-                    f'  <img src="{article_image_path_pelican}" alt="Moment Captured by Luminara - Scene from {title}">\n'
-                    f'  <figcaption>⁂ Moment Captured by Luminara ⁂</figcaption>\n'
+                    f'  <img src="{article_image_path_pelican}" alt="⁂ Moment Captured by The Ephergent\'s dimensionally-aware AI [Note: images may sound different in your dimension.] - Scene from {title} ⁂">\n'
+                    f'  <figcaption>⁂ Moment Captured by The Ephergent\'s dimensionally-aware AI [Note: images may sound different in your dimension.] ⁂</figcaption>\n'
                     f'</figure>'
                 )
                 if insert_idx >= len(paragraphs_for_image_insertion):
@@ -215,8 +215,10 @@ def format_story_markdown(
             f'  <source src="/{PELICAN_AUDIO_SUBDIR}/{audio_filename}" type="audio/mpeg">\n' # Specify type
             f'  Your browser does not support the audio element.\n'
             f'</audio>\n'
-            f'<figcaption style="font-size: 0.8em; color: grey;">⁂ Audio created by The Ephergent\'s dimensionally-aware AI [Note: voices may sound different in your dimension.] ⁂</figcaption>\n'
+            f'<figcaption style="font-size: 0.8em; color: grey;">⁂ Audio created by The Ephergent\'s dimensionally-aware AI [Note: voices may look different in your dimension.] ⁂</figcaption>\n'
         )
+        # Add audio source to metadata if needed for podcast or other purposes
+        metadata_lines.append(f"Audio: /{PELICAN_AUDIO_SUBDIR}/{audio_filename}") # Optional
         final_body_content += audio_html
         logger.info(f"Added audio player for '{audio_filename}' to markdown body.")
 
@@ -328,7 +330,7 @@ def format_denizen_pelican_markdown(
         body_parts.append(
             f'<figure>\n'
             f'  <img src="{article_image_path_pelican}" alt="{title} - Action Shot">\n'
-            f'  <figcaption>⁂ Moment Captured by Luminara ⁂</figcaption>\n'
+            f'  <figcaption>⁂ Moment Captured by The Ephergent\'s dimensionally-aware AI [Note: images may sound different in your dimension.] ⁂</figcaption>\n'
             f'</figure>'
         )
     else:
@@ -386,8 +388,10 @@ def format_denizen_pelican_markdown(
             f'  <source src="/{PELICAN_AUDIO_SUBDIR}/{audio_filename}" type="audio/mpeg">\n'
             f'  Your browser does not support the audio element.\n'
             f'</audio>\n'
-            f'<figcaption style="font-size: 0.8em; color: grey;">⁂ Audio created by The Ephergent\'s dimensionally-aware AI ⁂</figcaption>'
+            f'<figcaption style="font-size: 0.8em; color: grey;">⁂ Audio created by The Ephergent\'s dimensionally-aware AI [Note: voices may look different in your dimension.] ⁂</figcaption>'
         )
+        # Add audio source to metadata if needed for podcast or other purposes
+        metadata_lines.append(f"Audio: /{PELICAN_AUDIO_SUBDIR}/{audio_filename}")  # Optional
         body_parts.append(audio_html)
         logger.info(f"Added audio player for Denizen '{audio_filename}' to markdown body.")
 
