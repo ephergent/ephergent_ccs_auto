@@ -96,7 +96,6 @@ VALID_REGEN_STEPS = {'image', 'feature_image', 'article_image', 'audio', 'video'
 REPORTER_NAME_TO_ID_MAP = {
     "Pixel Paradox, Interdimensional Correspondent": "pixel_paradox",
     "Pixel Paradox": "pixel_paradox",
-    "Vex Parallax": "vex_parallax", # Added Vex Parallax
     # Add other reporters here if they appear in the JSON
 }
 
@@ -105,7 +104,7 @@ REPORTER_NAME_TO_ID_MAP = {
 dimension_themes = [
     "Urban Sci-Fi Prime Material", "Gothic Horror Nocturne", "Steampunk Cogsworth",
     "Cyberpunk AI Mechanica", "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
-    "Time-Travel Mystery Chronos Reach", "Absurdist Bureaucracy", "Political Thriller",
+    "Absurdist Bureaucracy", "Political Thriller",
     "Reality Stabilization", "Narrative Causality", "Interdimensional Economics", "Market Volatility",
     "Data-Driven Divination", "Temporal Anomaly Repair", "Memetic Warfare"
 ]
