@@ -153,7 +153,6 @@ def calculate_publish_date(month: int, week: int, start_date: datetime) -> datet
     # Assuming 4 weeks per month for simplicity, adjust if needed
     # Weeks are 1-indexed, Months are 1-indexed
     # Week 1 of Month 1 is day 0-6 offset
-    # Week 1 of Month 2 is day 28-34 offset
     # Week W of Month M is (M-1)*28 + (W-1)*7 days offset
     days_offset = (month - 1) * 28 + (week - 1) * 7
     return start_date + timedelta(days=days_offset)
