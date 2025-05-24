@@ -179,6 +179,8 @@ def prepare_text_for_tts(reporter: Reporter, article_content: str, title: str) -
     # Add the title as an introduction
     text += f"In this neural dimensional broadcast: {title}. \n\n"
 
+    # Add a slight pause before the article content
+    text += " \n\n \n\n \n\n"
     # Strip HTML tags first
     text += strip_html_tags(article_content) # Assumes strip_html_tags is defined below
 
@@ -189,13 +191,13 @@ def prepare_text_for_tts(reporter: Reporter, article_content: str, title: str) -
     # ⁂ Video created by The Ephergent's dimensionally-aware AI ⁂
     text = re.sub(r'⁂ Video created by The Ephergent\'s dimensionally-aware AI ⁂', '', text, flags=re.IGNORECASE)
     # ⁂ Audio created by The Ephergent's dimensionally-aware AI [Note: voices may sound different in your dimension.] ⁂
-    text = re.sub(r'⁂ Audio created by The Ephergent\'s dimensionally-aware AI \[Note: voices may sound different in your dimension.\] ⁂', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'⁂ Audio created by The Ephergent\'s dimensionally-aware AI [Note: voices may look different in your dimension.] ⁂', '', text, flags=re.IGNORECASE)
     # Your browser does not support the audio element.
     text = re.sub(r'Your browser does not support the audio element.', '', text, flags=re.IGNORECASE)
     # Illustration created by The Ephergent's dimensionally-aware AI ⁂
     text = re.sub(r'Illustration created by The Ephergent\'s dimensionally-aware AI ⁂', '', text, flags=re.IGNORECASE)
     # Remove any other specific phrases (like "Moment Captured by Luminara")
-    text = re.sub(r'⁂ Moment Captured by Luminara ⁂', '', text, flags=re.IGNORECASE) # Remove new caption
+    text = re.sub(r'⁂ Moment Captured by The Ephergent\'s dimensionally-aware AI [Note: images may sound different in your dimension.] ⁂', '', text, flags=re.IGNORECASE) # Remove new caption
     # Remove any other specific phrases (like "Moment Captured by Luminara")
     text = re.sub(r'<figure>.*?</figure>', '', text, flags=re.DOTALL | re.IGNORECASE) # Remove figure blocks
 
