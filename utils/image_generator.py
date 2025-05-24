@@ -161,23 +161,23 @@ def generate_article_essence_image_prompt(
     # Extract universe themes/elements (keep this)
     dimension_themes = [
         "Urban Sci-Fi Prime Material", "Gothic Horror Nocturne", "Steampunk Cogsworth",
-        "Cyberpunk AI Mechanica", "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
-        "Time-Travel Mystery Chronos Reach", "Absurdist Bureaucracy", "Political Thriller",
+        "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
+        "Absurdist Bureaucracy", "Political Thriller",
         "Reality Stabilization", "Narrative Causality"
     ]
     universe_elements = [
         "The Ephergent HQ", "A1 AI Assistant", "CLX Crystallized Laughter", "Those Who Wait",
         "Reality Anchors", "Narrative Engine", "Dimensional Rifts", "Temporal Paradoxes",
         "Sentient Infrastructure", "Reality Glitches", "Void Incursions", "Anti-Creation",
-        "Great Thought-Root Network", "Cybernetic Dinosaurs", "Gravity Reversals",
-        "Multi-directional Time Flow", "Probability Storms", "Data Streams", "Holographic Interfaces",
+        "Great Thought-Root Network", "Cybernetic Dinosaurs",
+        "Probability Storms", "Data Streams", "Holographic Interfaces",
         "Quantum Computing", "Espresso Machine Robot", "Dimensional Barriers", "Forbidden Knowledge",
         "Cyclical Collapse", "Reality Fatigue", "Rogue Narrative Loops"
     ]
     visual_keywords = [
         "unpredictable physics", "obsidian architecture", "stained-glass observatories", "clockwork mechanisms",
         "artisanal tea", "neon-lit megacities", "telepathic plants", "glowing root networks",
-        "half-formed reality", "time loops", "fragmented memories", "shifting geometric patterns",
+        "half-formed reality", "fragmented memories", "shifting geometric patterns",
         "flowing streams of light", "ancient symbols", "star charts", "data constructs", "cosmic void",
         "glitching displays", "unstable energy fluctuations", "corrupted data", "fractal patterns",
         "impossible geometries", "patchwork realities", "shadowy figures", "metallic tang of ozone",
@@ -296,16 +296,16 @@ def generate_story_image_prompt(
     # Extract universe themes/elements inspired by ephergent_universe_prompt.md
     dimension_themes = [
         "Urban Sci-Fi Prime Material", "Gothic Horror Nocturne", "Steampunk Cogsworth",
-        "Cyberpunk AI Mechanica", "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
-        "Time-Travel Mystery Chronos Reach", "Absurdist Bureaucracy", "Political Thriller",
+        "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
+        "Absurdist Bureaucracy", "Political Thriller",
         "Reality Stabilization", "Narrative Causality"
     ]
     universe_elements = [
         "The Ephergent HQ", "A1 AI Assistant", "CLX Crystallized Laughter", "Those Who Wait",
-        "Reality Anchors", "Narrative Engine", "Dimensional Rifts", "Temporal Paradoxes",
+        "Reality Anchors", "Narrative Engine", "Dimensional Rifts",
         "Sentient Infrastructure", "Reality Glitches", "Void Incursions", "Anti-Creation",
-        "Great Thought-Root Network", "Cybernetic Dinosaurs", "Gravity Reversals",
-        "Multi-directional Time Flow", "Probability Storms", "Data Streams", "Holographic Interfaces",
+        "Great Thought-Root Network", "Cybernetic Dinosaurs",
+        "Probability Storms", "Data Streams", "Holographic Interfaces",
         "Quantum Computing", "Espresso Machine Robot", "Dimensional Barriers", "Forbidden Knowledge",
         "Cyclical Collapse", "Reality Fatigue", "Rogue Narrative Loops"
     ]
@@ -316,7 +316,7 @@ def generate_story_image_prompt(
         "flowing streams of light", "ancient symbols", "star charts", "data constructs", "cosmic void",
         "glitching displays", "unstable energy fluctuations", "corrupted data", "fractal patterns",
         "impossible geometries", "patchwork realities", "shadowy figures", "metallic tang of ozone",
-        "cascading waterfalls (up and down)", "high-contrast lighting", "flickering neon", "shadowy ambiance"
+        "cascading waterfalls", "high-contrast lighting", "flickering neon", "shadowy ambiance"
     ]
 
     # Select relevant theme/elements based on reporter/story context if possible
@@ -719,26 +719,6 @@ def generate_image_with_comfyui(
                 logger.warning(f"Could not find EmptyLatentImage node or its inputs to update resolution.")
         else:
             logger.info("Resolution change skipped. Keeping original resolution.")
-
-        # 3. Update Output Filename in SaveImage Node(s)
-        # save_node_updated = False
-        # output_filename_stem = Path(filename).stem # Get filename without extension
-        # for node_id, node_data in workflow.items():
-        #      if node_data.get("class_type", "").startswith("SaveImage"):
-        #          if 'inputs' in workflow[node_id]:
-        #              workflow[node_id]['inputs']['filename_prefix'] = output_filename_stem
-        #              # Ensure foldername_prefix is empty if it exists, to avoid unwanted subdirs
-        #              if 'foldername_prefix' in workflow[node_id]['inputs']:
-        #                  workflow[node_id]['inputs']['foldername_prefix'] = ""
-        #                  logger.info(f"Ensured foldername_prefix is empty in SaveImage node {node_id}.")
-        #              logger.info(f"Updated SaveImage node {node_id} filename_prefix to: {output_filename_stem}")
-        #              save_node_updated = True
-        #          else:
-        #              logger.warning(f"Found SaveImage node {node_id} but it has no 'inputs'.")
-        #          # break # Assuming one SaveImage? Remove break if multiple need updating
-        #
-        # if not save_node_updated:
-        #      logger.warning("Could not find SaveImage node in workflow to update filename. Image might save with default name.")
 
         # --- Queue and Track ---
         prompt_id = queue_prompt(workflow, client_id)
