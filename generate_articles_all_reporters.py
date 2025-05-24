@@ -73,12 +73,7 @@ def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int
                 str(APP_SCRIPT),
                 "--auto-generate",
                 "--reporter", reporter_id,
-                # "--topic", """
-                #         This is my origin story, how I came to The Ephergent.
-                #         Write an origin story that includes: their ordinary world before transformation,
-                #         the inciting incident that changes everything, the struggle/conflict they face,
-                #         how they discover or develop their abilities/purpose, and their first step into their new role.
-                #         Focus on emotional stakes and character growth""",
+                "--topic", topic_string,
                 "--skip", skip_steps
             ]
             # NEW: Add month and week arguments if provided
