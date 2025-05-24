@@ -34,7 +34,7 @@
       "topics": ["intel", "underworld", "source", "oddity", "prime_material", "absurdity"],
       "tags": ["The Ephergent", "Informant", "Stapler", "Sentient Object", "Wildcard", "Prime Material Underworld", "Absurdity", "CLX", "Cybernetic Dinosaurs", "Houseplant Network"],
       "voice": "am_onyx(0.7)+bm_v0george(1.3)+bm_v0lewis(0.3)",
-      "stable_diffusion_prompt": "A digitally illustrated drawing in anime manga comic book style, A surprisingly expressive professional portrait image of an orange Swingline office stapler. Depict a standard metallic orange Swingline office stapler with subtle details: tiny glowing blue optical sensors. wearing a tiny 'Consultant' badge sticker. Background scene: noir shadowy office, noir underworld meeting, cluttered workbench. Mood: sneaky informant to unlikely hero. Color palette: Metallic orange/silver, small glowing blue elements, noir context-appropriate background. black background."
+      "stable_diffusion_prompt": "A digitally illustrated drawing in anime manga comic book style, A surprisingly expressive professional portrait image of an orange Swingline office stapler. Depict a standard metallic orange Swingline office stapler with subtle details: tiny glowing blue optical sensors. wearing a tiny 'Consultant' badge sticker. Background scene: noir shadowy office, noir underworld meeting, cluttered workbench. Mood: sneaky informant to unlikely hero. Color palette: Metallic orange/silver, small glowing blue elements, noir context-appropriate background."
     }
   ],
   "model_defaults": {
