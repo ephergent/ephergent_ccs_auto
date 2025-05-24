@@ -286,6 +286,29 @@ def regenerate_artifacts(archive_id: str, steps_to_regenerate: List[str]):
     is_denizen = category.lower() == "dimensional denizen"
     location = metadata.get('location', 'Unknown Location') # Get location from metadata
 
+    # For Denizen regeneration, we need char_details if available in the archived JSON
+    raw_denizen_data = None
+    # Try to find the original JSON file in the archive if it exists
+    original_json_file = next(target_archive_dir.glob("*.json"), None)
+    if original_json_file and is_denizen:
+        try:
+            with open(original_json_file, 'r', encoding='utf-8') as f:
+                archived_json_data = json.load(f)
+            raw_denizen_data = archived_json_data.get('char_details') # Assuming char_details is stored in the JSON
+            if raw_denizen_data:
+                # Reconstruct denizen_data structure for prepare_denizen_text_for_tts
+                raw_denizen_data = {
+                    'name': title.replace("Daily Dimensional Denizen: ", ""),
+                    'backstory': content_body,
+                    'details': raw_denizen_data
+                }
+                logger.info("Loaded raw denizen data for regeneration.")
+            else:
+                logger.warning(f"No 'char_details' found in archived JSON for Denizen: {original_json_file.name}")
+        except Exception as e:
+            logger.warning(f"Could not load original JSON for Denizen regeneration from {original_json_file.name}: {e}")
+
+
     logger.info(f"Loaded Metadata: Title='{title}', Author='{author_name}', Category='{category}', Denizen={is_denizen}, Location='{location}'")
 
     # --- Get Reporter ---
@@ -309,6 +332,10 @@ def regenerate_artifacts(archive_id: str, steps_to_regenerate: List[str]):
     existing_feature_image = next(archive_images_dir.glob(f"{archive_id}_feature.*"), None)
     # Article images are now expected to be a single file named like *_article_essence.*
     existing_article_image = next(archive_images_dir.glob(f"{archive_id}_article_essence.*"), None)
+    # For Denizens, it might be *_action.*
+    if is_denizen and not existing_article_image:
+        existing_article_image = next(archive_images_dir.glob(f"{archive_id}_action.*"), None)
+
     existing_audio = next(archive_audio_dir.glob(f"{archive_id}_audio*.*"), None) # Allow _combined suffix
     existing_video = next(archive_video_dir.glob(f"{archive_id}_video.*"), None)
     existing_prompts_file = next(target_archive_dir.glob(f"{archive_id}_image_prompts.json"), None)
@@ -426,16 +453,17 @@ def regenerate_artifacts(archive_id: str, steps_to_regenerate: List[str]):
         temp_audio_dir = temp_regen_dir / "audio" # Save to temp audio subdir
         temp_audio_dir.mkdir(exist_ok=True)
         new_audio_path = None
-        if is_denizen:
+        if is_denizen and raw_denizen_data:
             # Need to reconstruct denizen data for TTS prep
-            logger.warning("Denizen audio regeneration requires specific data extraction - using basic content.")
-            denizen_data_for_tts = {'name': title.replace("Daily Dimensional Denizen: ",""), 'details': {}} # Basic reconstruction
-            denizen_audio_text = prepare_denizen_text_for_tts(denizen_data_for_tts, content_body) # Use content_body
+            logger.info("Preparing Denizen text for audio generation.")
+            denizen_audio_text = prepare_denizen_text_for_tts(raw_denizen_data, content_body) # Use content_body
             if denizen_audio_text:
                  new_audio_path = generate_article_audio(
                      reporter=reporter, article_content=denizen_audio_text, title=title,
                      output_dir=temp_regen_dir, filename_base=archive_id, speed=1.1 # Save to base temp dir
                  )
+            else:
+                logger.warning("Failed to prepare Denizen text for audio.")
         else:
             new_audio_path = generate_article_audio(
                 reporter=reporter, article_content=content_body, title=title, # Use content_body
@@ -996,7 +1024,7 @@ def set_article_status(archive_id: str, status: str) -> bool:
 def orchestrate_artifact_generation(
     reporter: Reporter,
     selected_title: str,
-    article_content: str, # This is now the clean content body
+    article_content: str, # This is the main content body (e.g., article text or denizen backstory)
     summary_text: str,
     topic_text: str, # Not directly used in artifact generation, but kept for context if needed
     filename_base: str,
@@ -1004,7 +1032,9 @@ def orchestrate_artifact_generation(
     publish_date: datetime,
     skip_steps: List[str],
     archiver: Archiver,
-    story_data_for_pelican: Dict[str, Any] # Includes location, stardate, etc. (from JSON)
+    story_data_for_pelican: Dict[str, Any], # Original story data (from JSON or generated)
+    is_denizen_workflow: bool = False, # NEW PARAMETER
+    raw_denizen_data: Optional[Dict[str, Any]] = None # NEW PARAMETER for Denizen specific data
     ) -> Dict[str, Any] | None:
     """
     Orchestrates the generation of all artifacts for a single story.
@@ -1021,6 +1051,8 @@ def orchestrate_artifact_generation(
         skip_steps (List[str]): List of steps to skip.
         archiver (Archiver): Initialized Archiver instance.
         story_data_for_pelican (Dict[str, Any]): Original story data including location, stardate, etc.
+        is_denizen_workflow (bool): True if this is a Denizen profile generation.
+        raw_denizen_data (Optional[Dict[str, Any]]): Raw data from generate_denizen_profile for Denizens.
 
     Returns:
         Dict[str, Any] | None: Dictionary containing paths to generated artifacts and metadata,
@@ -1129,11 +1161,24 @@ def orchestrate_artifact_generation(
     audio_path = None
     if "audio" not in skip_steps:
         logger.info("Generating Audio...")
-        # For standard articles, use the main content body
-        audio_path = generate_article_audio(
-            reporter=reporter, article_content=article_content, title=selected_title,
-            output_dir=current_output_dir, filename_base=filename_base, speed=1.1 # Use base output dir for audio
-        )
+        if is_denizen_workflow and raw_denizen_data:
+            logger.info("Preparing Denizen text for audio generation.")
+            # For Denizens, article_content is the backstory, raw_denizen_data contains char_details
+            denizen_audio_text = prepare_denizen_text_for_tts(raw_denizen_data, article_content)
+            if denizen_audio_text:
+                audio_path = generate_article_audio(
+                    reporter=reporter, article_content=denizen_audio_text, title=selected_title,
+                    output_dir=current_output_dir, filename_base=filename_base, speed=1.1
+                )
+            else:
+                logger.warning("Failed to prepare Denizen text for audio.")
+        else:
+            # Standard article audio generation
+            audio_path = generate_article_audio(
+                reporter=reporter, article_content=article_content, title=selected_title,
+                output_dir=current_output_dir, filename_base=filename_base, speed=1.1
+            )
+
         if audio_path:
             generated_artifacts["audio"] = audio_path
             logger.info(f"Generated audio: {audio_path.name}")
@@ -1169,43 +1214,63 @@ def orchestrate_artifact_generation(
 
     # 4. Format Pelican Markdown
     logger.info("Formatting Pelican Markdown...")
-    # Determine category and tags for Pelican metadata
-    category = metadata.get('category', 'Article') # Use category from input data, default to Article
-    tags = metadata.get('tags', []) # Use tags from input data, combined with reporter/base tags earlier
+    category = metadata.get('category', 'Article')
+    tags = metadata.get('tags', [])
+    pelican_markdown_content = None
 
-    # Prepare the story_data dictionary for format_story_markdown
-    # This should contain the final, processed values
-    story_data_for_markdown = {
-        'title': selected_title,
-        'content': article_content, # Use the clean content body
-        'summary': summary_text,
-        'location': metadata['location'], # Use the determined location
-        'stardate': metadata['stardate'], # Use the generated stardate
-        'featured_characters': metadata['featured_characters'], # Use the determined featured characters
-        # Add other relevant fields if format_story_markdown uses them from story_data
-        # e.g., 'Month', 'Week', 'Filed by' might be useful for the template
-        'Month': story_data_for_pelican.get('Month'), # Keep original Month/Week if available
-        'Week': story_data_for_pelican.get('Week'),
-        'Filed by': reporter.name, # Use the reporter name
-    }
+    if is_denizen_workflow and raw_denizen_data:
+        logger.info("Formatting as Dimensional Denizen markdown.")
+        char_name = selected_title.replace("Daily Dimensional Denizen: ", "") # Extract name from title
+        char_backstory = article_content # This is the denizen's backstory
+        char_details = raw_denizen_data.get('details', {}) # Get char_details from raw_denizen_data
 
-    # Correctly call format_story_markdown with story_data dict and other explicit args
-    pelican_markdown_content = format_story_markdown(
-        story_data=story_data_for_markdown, # Pass the constructed dict as the first argument
-        reporter_name=reporter.name,        # Pass reporter name explicitly
-        category=category,                  # Pass category explicitly
-        tags=tags,                          # Pass tags explicitly
-        feature_image_filename=generated_artifacts["feature_image"].name if generated_artifacts.get("feature_image") else None,
-        article_image_filenames=[img.name for img in generated_artifacts["article_images"]],
-        audio_filename=generated_artifacts["audio"].name if generated_artifacts.get("audio") else None,
-        youtube_video_url=None, # Still None at this stage
-        publish_date=publish_date
-    )
-    markdown_temp_path = current_output_dir / f"{filename_base}.md"
-    with open(markdown_temp_path, "w", encoding="utf-8") as f:
-        f.write(pelican_markdown_content)
-    generated_artifacts["markdown"] = markdown_temp_path
-    logger.info(f"Formatted Pelican markdown: {markdown_temp_path.name}")
+        pelican_markdown_content = format_denizen_pelican_markdown(
+            char_name=char_name,
+            char_backstory=char_backstory,
+            char_details=char_details,
+            feature_image_filename=generated_artifacts["feature_image"].name if generated_artifacts.get("feature_image") else None,
+            article_image_filename=generated_artifacts["article_images"][0].name if generated_artifacts.get("article_images") and generated_artifacts["article_images"] else None, # Denizen expects single path
+            audio_filename=generated_artifacts["audio"].name if generated_artifacts.get("audio") else None,
+            youtube_video_url=None, # Still None at this stage
+            author=reporter.name,
+            category=category,
+            tags=tags,
+            publish_date=publish_date
+        )
+    else:
+        logger.info("Formatting as standard Article markdown.")
+        story_data_for_markdown = {
+            'title': selected_title,
+            'content': article_content,
+            'summary': summary_text,
+            'location': metadata['location'],
+            'stardate': metadata['stardate'],
+            'featured_characters': metadata['featured_characters'],
+            'Month': story_data_for_pelican.get('Month'),
+            'Week': story_data_for_pelican.get('Week'),
+            'Filed by': reporter.name,
+        }
+        pelican_markdown_content = format_story_markdown(
+            story_data=story_data_for_markdown,
+            reporter_name=reporter.name,
+            category=category,
+            tags=tags,
+            feature_image_filename=generated_artifacts["feature_image"].name if generated_artifacts.get("feature_image") else None,
+            article_image_filenames=[img.name for img in generated_artifacts["article_images"]],
+            audio_filename=generated_artifacts["audio"].name if generated_artifacts.get("audio") else None,
+            youtube_video_url=None,
+            publish_date=publish_date
+        )
+
+    if pelican_markdown_content:
+        markdown_temp_path = current_output_dir / f"{filename_base}.md"
+        with open(markdown_temp_path, "w", encoding="utf-8") as f:
+            f.write(pelican_markdown_content)
+        generated_artifacts["markdown"] = markdown_temp_path
+        logger.info(f"Formatted Pelican markdown: {markdown_temp_path.name}")
+    else:
+        logger.error("Failed to format Pelican markdown content.")
+        return None # Critical failure
 
 
     # 5. Export to Pelican Content Directory
@@ -1218,13 +1283,13 @@ def orchestrate_artifact_generation(
             "audio": generated_artifacts.get("audio")
         }
         # Determine if it's a denizen for export path
-        is_denizen = metadata.get('category', '').lower() == 'dimensional denizen'
+        is_denizen_export = metadata.get('category', '').lower() == 'dimensional denizen'
 
         pelican_path = export_to_pelican(
             markdown_content=pelican_markdown_content,
             markdown_filename_base=filename_base,
             media_paths=media_for_export,
-            is_denizen=is_denizen # Pass the denizen status
+            is_denizen=is_denizen_export # Pass the denizen status
         )
         if pelican_path:
             metadata['pelican_path'] = pelican_path
@@ -1453,7 +1518,8 @@ def process_story_from_file(
     story_data: Dict[str, Any],
     story_file_path: Path, # Add path to the original input file
     archiver: Archiver, # Pass archiver instance
-    skip_steps: Optional[List[str]] = None
+    skip_steps: Optional[List[str]] = None,
+    raw_denizen_data: Optional[Dict[str, Any]] = None # NEW PARAMETER
     ) -> Dict[str, Any] | None:
     """
     Processes a single story from a JSON input file, generating all artifacts.
@@ -1463,6 +1529,7 @@ def process_story_from_file(
         story_file_path (Path): The path to the original input JSON file.
         archiver (Archiver): Initialized Archiver instance.
         skip_steps (Optional[List[str]]): List of steps to skip for this run.
+        raw_denizen_data (Optional[Dict[str, Any]]): Raw data from generate_denizen_profile for Denizens.
 
     Returns:
         Dict[str, Any] | None: Dictionary containing paths to generated artifacts and metadata,
@@ -1539,7 +1606,9 @@ def process_story_from_file(
             publish_date=publish_date,
             skip_steps=skip_steps,
             archiver=archiver,
-            story_data_for_pelican=story_data # Pass the full story_data dict (includes location, stardate, etc.)
+            story_data_for_pelican=story_data, # Pass the full story_data dict (includes location, stardate, etc.)
+            is_denizen_workflow=story_data.get('category', '').lower() == 'dimensional denizen', # Determine if Denizen
+            raw_denizen_data=raw_denizen_data # Pass the raw denizen data if available
         )
 
         if processed_data:
@@ -2086,122 +2155,68 @@ if __name__ == "__main__":
             selected_title = f"Daily Dimensional Denizen: {char_name}"
             summary = char_backstory # Use backstory as summary
 
-            if "audio" not in steps_to_skip_list:
-                logger.info("Generating Denizen Audio...")
-                denizen_audio_text = prepare_denizen_text_for_tts(denizen_data, char_backstory)
-                if denizen_audio_text:
-                    audio_path = generate_article_audio(
-                        reporter=reporter_obj, article_content=denizen_audio_text, title=selected_title,
-                        output_dir=denizen_output_dir, filename_base=new_filename_base, speed=1.1 # Use new_filename_base
-                    )
-                    denizen_artifacts["audio"] = audio_path
-                else: logger.warning("Failed to prepare Denizen text for audio.")
-            else: logger.info("Skipping Denizen Audio.")
+            # NEW: Generate Ephergent Stardate for Denizen
+            denizen_day_of_week = random.randint(1, 7)
+            denizen_ephergent_stardate = f"Cycle {denizen_month:03d}.{denizen_week:03d}.{denizen_day_of_week:03d}"
+            logger.info(f"Generated Denizen Ephergent Stardate: {denizen_ephergent_stardate}")
 
-            if "video" not in steps_to_skip_list and denizen_artifacts.get("audio") and denizen_artifacts.get("feature_image"):
-                 logger.info("Generating Denizen Video...")
-                 denizen_video_output_dir = denizen_output_dir / "video"
-                 denizen_video_output_dir.mkdir(exist_ok=True)
-                 denizen_video_path = generate_youtube_video(
-                     reporter=reporter_obj, title=selected_title, audio_path=denizen_artifacts["audio"],
-                     featured_image_path=denizen_artifacts["feature_image"],
-                     article_image_paths=[denizen_artifacts.get("article_images")] if denizen_artifacts.get("article_images") else [],
-                     output_dir=denizen_video_output_dir, filename_base=new_filename_base # Use new_filename_base
-                 )
-                 denizen_artifacts["video"] = denizen_video_path
-            else: logger.info("Skipping Denizen Video.")
+            # NEW: Determine Denizen Location (from char_details)
+            denizen_location = char_details.get('dimension_of_origin', 'Unknown Dimension')
+            logger.info(f"Determined Denizen Location: {denizen_location}")
 
-            denizen_youtube_url = None
-            if "youtube" not in steps_to_skip_list and denizen_artifacts.get("video"):
-                 logger.info("Uploading Denizen Video...")
-                 denizen_video_id = upload_to_youtube(
-                     video_file_path=denizen_artifacts["video"], title=selected_title, description=summary,
-                     tags=tags_list, thumbnail_path=denizen_artifacts.get("feature_image")
-                 )
-                 if denizen_video_id:
-                     denizen_youtube_url = f"https://www.youtube.com/watch?v={denizen_video_id}"
-                     denizen_metadata['youtube_url'] = denizen_youtube_url
-                 else: logger.warning("Denizen YouTube upload failed.")
-            else: logger.info("Skipping Denizen YouTube Upload.")
+            # NEW: Construct the Denizen story data dictionary for the input JSON file
+            # This dict will be passed to process_story_from_file as story_data
+            denizen_story_data_dict = {
+                "Month": denizen_month,
+                "Week": denizen_week,
+                "title": selected_title,
+                "Filed by": reporter_obj.name,
+                "content": char_backstory, # Main content for Denizen
+                "summary": summary, # Denizen summary is backstory
+                "topic": selected_title, # Use title as topic for Denizen
+                "location": denizen_location,
+                "stardate": denizen_ephergent_stardate,
+                "featured_characters": [char_name],
+                "category": category, # "Dimensional Denizen"
+                "tags": tags_list, # ["The Ephergent", "Dimensional Denizen"]
+                "char_details": char_details # Pass char_details for format_denizen_pelican_markdown
+            }
 
-            logger.info("Formatting Denizen Markdown...")
-            pelican_markdown_content = format_denizen_pelican_markdown(
-                char_name=char_name, char_backstory=char_backstory, char_details=char_details,
-                feature_image_filename=denizen_artifacts["feature_image"].name if denizen_artifacts.get("feature_image") else None,
-                article_image_filename=denizen_artifacts["article_images"].name if denizen_artifacts.get("article_images") else None,
-                audio_filename=denizen_artifacts["audio"].name if denizen_artifacts.get("audio") else None,
-                youtube_video_url=denizen_youtube_url, author=reporter_obj.name, category=category, tags=tags_list,
-                publish_date=denizen_publish_date # Use the calculated publish date
+            # NEW: Determine target file path for the Denizen JSON
+            denizen_target_filename = f"{new_filename_base}.json"
+            denizen_target_file_path = INPUT_STORIES_DIR_READY / denizen_target_filename
+
+            logger.info(f"Saving generated Denizen story data to input file: {denizen_target_file_path}")
+            try:
+                INPUT_STORIES_DIR_READY.mkdir(parents=True, exist_ok=True)
+                with open(denizen_target_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(denizen_story_data_dict, f, indent=2)
+                logger.info(f"Successfully saved generated Denizen story to {denizen_target_file_path.name}")
+            except IOError as e:
+                logger.error(f"Fatal: Could not save generated Denizen story to {denizen_target_file_path}: {e}", exc_info=True)
+                sys.exit(1) # Exit if we can't save the input file
+
+            # NEW: Process the newly created Denizen JSON file using the standard workflow
+            logger.info(f"Processing the newly created Denizen input file: {denizen_target_file_path.name}")
+            processed_denizen_data = process_story_from_file(
+                denizen_story_data_dict, # Pass the constructed dict
+                denizen_target_file_path, # Pass the path to the saved file
+                main_archiver,
+                steps_to_skip_list,
+                raw_denizen_data=denizen_data # Pass the raw denizen_data from generate_denizen_profile
             )
-            markdown_temp_path = denizen_output_dir / f"{new_filename_base}.md" # Use new_filename_base
-            with open(markdown_temp_path, "w", encoding="utf-8") as f: f.write(pelican_markdown_content)
-            denizen_artifacts["markdown"] = markdown_temp_path
 
-            denizen_pelican_path = None
-            if "export" not in steps_to_skip_list:
-                 logger.info("Exporting Denizen to Pelican...")
-                 denizen_media = {
-                     "feature_image": denizen_artifacts.get("feature_image"),
-                     "article_images": [denizen_artifacts.get("article_images")] if denizen_artifacts.get("article_images") else [],
-                     "audio": denizen_artifacts.get("audio")
-                 }
-                 denizen_pelican_path = export_to_pelican(
-                     markdown_content=pelican_markdown_content, markdown_filename_base=new_filename_base, # Use new_filename_base
-                     media_paths=denizen_media, is_denizen=True
-                 )
-                 if denizen_pelican_path: denizen_metadata['pelican_path'] = denizen_pelican_path
-                 else: logger.error("Failed to export Denizen to Pelican.")
-            else: logger.info("Skipping Denizen Pelican Export.")
+            if not processed_denizen_data:
+                logger.error("Failed to process Denizen story from file.")
+                sys.exit(1)
 
-            if "git" not in steps_to_skip_list and denizen_pelican_path:
-                 logger.info("Publishing Denizen draft to Git...")
-                 publish_to_git(f"Add denizen profile: {char_name}")
-            else: logger.info("Skipping Denizen Git Publish.")
-
-            if "archive" not in steps_to_skip_list and main_archiver and main_archiver.initialized:
-                 logger.info("Archiving Denizen Artifacts...")
-                 summary_path = denizen_output_dir / f"{new_filename_base}_summary.txt" # Use new_filename_base
-                 with open(summary_path, "w", encoding="utf-8") as f: f.write(summary)
-                 denizen_artifacts["summary_file"] = summary_path
-                 denizen_article_images_for_archive = [denizen_artifacts.get("article_images")] if denizen_artifacts.get("article_images") else []
-                 denizen_artifacts_for_archive = denizen_artifacts.copy()
-                 denizen_artifacts_for_archive["article_images"] = denizen_article_images_for_archive
-                 archive_dir = main_archiver.archive_artifacts(new_filename_base, denizen_artifacts_for_archive) # Use new_filename_base
-                 if archive_dir: denizen_metadata['archive_path'] = archive_dir
-                 else: logger.warning("Denizen archiving failed.")
-            else: logger.info("Skipping Denizen Archiving.")
-
-            if "mail" not in steps_to_skip_list and denizen_pelican_path:
-                logger.info("Sending Denizen Email Notification...")
-                try:
-                    denizen_url = f"{BLOG_URL}/{PELICAN_DENIZENS_SUBDIR}/{new_filename_base}.html" # Use new_filename_base
-                    denizen_feature_image_url = f"{BLOG_URL}/{PELICAN_IMAGES_SUBDIR}/{denizen_artifacts['feature_image'].name}" if denizen_artifacts.get("feature_image") else f"{BLOG_URL}/theme/images/ephergent_logo.png"
-                    email_vars = {
-                        "newsletter_date": denizen_publish_date.strftime("%B %d, %Y"), "article_title": selected_title, # Use denizen_publish_date
-                        "article_summary": summary, "article_url": denizen_url,
-                        "article_feature_image_url": denizen_feature_image_url,
-                    }
-                    send_email(subject=f"Ephergent Denizen: {char_name}", template=os.getenv('MAILGUN_TEMPLATE', "daily.dimensional.dispatch"), variables=email_vars)
-                except Exception as e: logger.error(f"Failed to send Denizen email: {e}", exc_info=True)
-            else: logger.info("Skipping Denizen Email.")
-
-            if "social" not in steps_to_skip_list and denizen_pelican_path:
-                logger.info("Posting Denizen to Social Media...")
-                try:
-                    denizen_url = f"{BLOG_URL}/{PELICAN_DENIZENS_SUBDIR}/{new_filename_base}.html" # Use new_filename_base
-                    post_article_to_social_media(
-                        title=selected_title, url=denizen_url, summary=summary,
-                        image_path=denizen_artifacts.get("feature_image"), tags=tags_list
-                    )
-                except Exception as e: logger.error(f"Failed to post Denizen to social: {e}", exc_info=True)
-            else: logger.info("Skipping Denizen Social Post.")
             logger.info("Denizen workflow finished successfully.")
 
         except Exception as e:
             logger.error(f"Denizen workflow failed: {e}", exc_info=True)
             sys.exit(1)
         finally:
-            cleanup_output_directory(denizen_output_dir)
+            cleanup_output_directory(denizen_output_dir) # This remains the same
 
     elif args.auto_generate:
         # The generative workflow now handles saving to file and calling process_story_from_file
