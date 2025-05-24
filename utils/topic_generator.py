@@ -301,10 +301,6 @@ if __name__ == '__main__':
         try:
             reporters_data = [
                 ("pixel_paradox", "Pixel Paradox", ["general", "news", "opinion", "feature", "investigation"]),
-                ("vex_parallax", "Vex Parallax", ["science", "research", "discovery", "technology", "physics"]),
-                ("nova_blacklight", "Nova Blacklight", ["entertainment", "celebrities", "culture", "arts", "music"]),
-                ("zephyr_glitch", "Zephyr Glitch", ["tech", "digital", "online", "virtual", "cybersecurity", "ai"]),
-                ("echo_voidwhisper", "Echo Voidwhisper", ["business", "market", "finance", "economy", "trade"]),
             ]
 
             for i in range(5):  # Generate a few topics to see variety

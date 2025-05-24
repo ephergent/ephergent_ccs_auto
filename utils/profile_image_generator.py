@@ -86,20 +86,18 @@ elif not GEMINI_API_KEY:
 # --- Ephergent Universe Character Details (Inspired by System Prompt) ---
 dimension_themes = [
     "Urban Sci-Fi Prime Material", "Gothic Horror Nocturne", "Steampunk Cogsworth",
-    "Cyberpunk AI Mechanica", "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
-    "Time-Travel Mystery Chronos Reach", "Absurdist Bureaucracy", "Political Thriller",
+    "Ecological Sci-Fi Verdantia", "Cosmic Horror The Edge",
+    "Absurdist Bureaucracy", "Political Thriller",
     "Reality Stabilization", "Narrative Causality", "Interdimensional Economics", "Market Volatility",
-    "Data-Driven Divination", "Temporal Anomaly Repair", "Memetic Warfare"
+    "Data-Driven Divination", "Memetic Warfare"
 ]
 character_types = [
     "human", "dimensional hybrid", "sentient algorithm", "reality architect", "thought harvester",
     "paradox entity", "frequency being", "dream cartographer", "cosmic bureaucrat",
     "metamorphic collective", "cybernetically enhanced dinosaur", "telepathic houseplant",
     "sentient weather pattern", "rogue AI assistant", "memory broker", "conceptual artist",
-    "bio-hacker", "quantum shifter", "void nomad", "chronofragment", "emotion sculptor",
-    "probability weaver", "data specter", "sentient stapler", "AI espresso machine",
-    "collector of forbidden knowledge", "cloud parliament insider", "Nocturne aesthete",
-    "Verdantian elder root", "academic consultant (applied impossibility)"
+    "bio-hacker", "quantum shifter", "void nomad", "emotion sculptor",
+    "probability weaver", "data specter", "sentient stapler", "AI espresso machine"
 ]
 appearance_traits = [
     "crystalline", "shadow-shifting", "bioluminescent", "flame-core", "void-touched",
@@ -132,9 +130,8 @@ accessories = [
     "multifunctional collar", "holographic press badge", "geometric jewelry", "oddly shaped coffee cup",
     "embedded scientific tools", "augmented reality glasses", "cybernetic interface hand",
     "amulet with dark jewel", "futuristic microphone drone", "glowing data-jewels",
-    "jewelry like frozen moments", "holographic interfaces (A1)", "multi-lensed camera rig",
-    "round goggles with clockwork lenses", "glowing artifact", "visor displaying probability streams",
-    "tiny 'Consultant' badge (stapler)"
+    "jewelry like frozen moments", "holographic interfaces", "multi-lensed camera rig",
+    "round goggles with holographic lenses", "glowing artifact", "visor displaying probability streams"
 ]
 expressions = [
     "wry expression", "quirky smile", "confused look", "mischievous grin",
@@ -143,7 +140,7 @@ expressions = [
     "contemplating a paradox", "adjusting reality-stabilizing amulet", "sipping cosmic coffee",
     "serious analytical expression", "intense and focused", "calculating and enigmatic",
     "charismatic and mischievous", "graceful and editorial", "detached fascination to horror",
-    "intense concentration", "smug determined sneaky (stapler)", "wise and ancient", "sophisticated weariness"
+    "intense concentration", "smug determined sneaky", "wise and ancient", "sophisticated weariness"
 ]
 mundane_actions = [
     "reading a data slate", "adjusting their clothing", "looking thoughtfully into the distance",
@@ -151,8 +148,8 @@ mundane_actions = [
     "waiting for a dimensional bus", "polishing their accessory", "consulting a star chart",
     "typing on a holographic keyboard", "repairing a small gadget", "watering a bizarre plant",
     "sorting through interdimensional mail", "calibrating a sensor", "sketching in a notebook",
-    "brewing espresso (A1)", "looking through a camera viewfinder", "holding a complex data slate",
-    "scuttling across a desk (stapler)", "issuing telepathic warnings", "observing a rift with dismay"
+    "brewing espresso", "looking through a camera viewfinder", "holding a complex data slate",
+    "scuttling across a desk", "issuing telepathic warnings", "observing a rift with dismay"
 ]
 
 # --- Helper Functions ---
