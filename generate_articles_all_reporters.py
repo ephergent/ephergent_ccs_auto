@@ -53,6 +53,9 @@ def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int
 
         current_article_index = start_index
 
+        topic_string = """
+        """
+
         for reporter in reporters:
             reporter_id = reporter.get('id')
             reporter_name = reporter.get('name', reporter_id) # Use name if available
