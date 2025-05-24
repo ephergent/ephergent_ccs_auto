@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 import logging
+import argparse # Import argparse
+from typing import Optional # Import Optional for type hints
 
 # Set up logging for this script
 logging.basicConfig(
@@ -17,10 +19,11 @@ logger = logging.getLogger(__name__)
 PROMPTS_FILE = Path(__file__).parent / 'prompts' / 'personality_prompts.json'
 APP_SCRIPT = Path(__file__).parent / 'app.py'
 
-def generate_articles_for_all_reporters():
+def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int], generate_denizen: bool):
     """
     Reads reporter IDs from prompts/personality_prompts.json and runs app.py
     to auto-generate an article for each, skipping all steps except generation.
+    Optionally specifies month and week for generation, and generates a Denizen.
     """
     if not PROMPTS_FILE.exists():
         logger.error(f"Error: Prompts file not found at {PROMPTS_FILE}")
@@ -35,11 +38,14 @@ def generate_articles_for_all_reporters():
             prompts_data = json.load(f)
         reporters = prompts_data.get('reporters', [])
 
-        if not reporters:
-            logger.info("No reporters found in the prompts file.")
+        if not reporters and not generate_denizen:
+            logger.info("No reporters found in the prompts file and Denizen generation not requested. Exiting.")
             sys.exit(0)
+        elif not reporters and generate_denizen:
+            logger.info("No reporters found, but Denizen generation requested. Proceeding with Denizen only.")
+        else:
+            logger.info(f"Found {len(reporters)} reporters. Starting article generation for each.")
 
-        logger.info(f"Found {len(reporters)} reporters. Starting article generation for each.")
 
         # Define the steps to skip as per the user's request
         skip_steps = "audio,git,youtube,archive,export,image,video,social"
@@ -70,6 +76,12 @@ def generate_articles_for_all_reporters():
                 #         Focus on emotional stakes and character growth""",
                 "--skip", skip_steps
             ]
+            # NEW: Add month and week arguments if provided
+            if month is not None:
+                command.extend(["--month", str(month)])
+            if week is not None:
+                command.extend(["--week", str(week)])
+
 
             logger.info(f"Running command: {' '.join(command)}")
 
@@ -95,7 +107,33 @@ def generate_articles_for_all_reporters():
             except Exception as e:
                 logger.error(f"An unexpected error occurred while processing {reporter_name} (ID: {reporter_id}): {e}", exc_info=True)
 
-        logger.info("\n--- Finished generating articles for all reporters ---")
+        # NEW: Add Denizen generation after all reporters
+        if generate_denizen:
+            logger.info("\n--- Generating Dimensional Denizen profile ---")
+            denizen_command = [
+                sys.executable,
+                str(APP_SCRIPT),
+                "--denizen",
+                "--skip", skip_steps # Apply skip steps to denizen generation too
+            ]
+            # Add month and week arguments if provided
+            if month is not None:
+                denizen_command.extend(["--month", str(month)])
+            if week is not None:
+                denizen_command.extend(["--week", str(week)])
+
+            logger.info(f"Running command: {' '.join(denizen_command)}")
+            try:
+                result = subprocess.run(denizen_command, capture_output=True, text=True, check=True)
+                logger.info("Successfully generated Dimensional Denizen profile.")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Error generating Denizen profile: Command failed with exit code {e.returncode}")
+                logger.error(f"Subprocess stderr:\n{e.stderr}")
+                logger.error(f"Subprocess stdout:\n{e.stdout}")
+            except Exception as e:
+                logger.error(f"An unexpected error occurred while generating Denizen profile: {e}", exc_info=True)
+
+        logger.info("\n--- Finished generating articles for all reporters and Denizen ---")
 
     except json.JSONDecodeError:
         logger.error(f"Error: Could not parse JSON from {PROMPTS_FILE}. Please check the file format.")
@@ -105,4 +143,29 @@ def generate_articles_for_all_reporters():
         sys.exit(1)
 
 if __name__ == "__main__":
-    generate_articles_for_all_reporters()
+    parser = argparse.ArgumentParser(description="Generate articles for all reporters and optionally a Denizen.")
+    parser.add_argument(
+        "--month",
+        type=int,
+        default=None,
+        help="Specify the month number for all generated articles (e.g., 1 for Cycle 001)."
+    )
+    parser.add_argument(
+        "--week",
+        type=int,
+        default=None,
+        help="Specify the week number for all generated articles (e.g., 1 for Week 01)."
+    )
+    parser.add_argument(
+        "--denizen",
+        action="store_true",
+        help="Also generate a Dimensional Denizen profile for the specified date."
+    )
+    args = parser.parse_args()
+
+    # Basic validation for month/week
+    if (args.month is None and args.week is not None) or \
+       (args.month is not None and args.week is None):
+        parser.error("Both --month and --week must be provided if either is used.")
+
+    generate_articles_for_all_reporters(args.month, args.week, args.denizen)

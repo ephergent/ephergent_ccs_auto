@@ -1005,7 +1005,7 @@ def orchestrate_artifact_generation(
     publish_date: datetime,
     skip_steps: List[str],
     archiver: Archiver,
-    story_data_for_pelican: Dict[str, Any] # Includes location, stardate, featured_characters, etc. (from JSON)
+    story_data_for_pelican: Dict[str, Any] # Includes location, stardate, etc. (from JSON)
     ) -> Dict[str, Any] | None:
     """
     Orchestrates the generation of all artifacts for a single story.
@@ -1567,7 +1567,9 @@ def run_generative_workflow(
     reporter_id_arg: Optional[str],
     topic_arg: Optional[str],
     skip_steps: List[str],
-    archiver: Archiver
+    archiver: Archiver,
+    month_arg: Optional[int] = None, # NEW PARAMETER
+    week_arg: Optional[int] = None   # NEW PARAMETER
     ) -> None:
     """
     Runs the fully automatic content generation workflow.
@@ -1672,13 +1674,17 @@ def run_generative_workflow(
         logger.info(f"Selected Title: {selected_title}")
 
         # --- Determine Next Story ID and Calculate Publish Date ---
-        next_month, next_week = get_next_story_id()
-        # Calculate publish date based on the determined ID
+        if month_arg is not None and week_arg is not None:
+            next_month, next_week = month_arg, week_arg
+            logger.info(f"Using provided month/week: {next_month:03d}_{next_week:02d}")
+        else:
+            next_month, next_week = get_next_story_id()
+            logger.info(f"Calculated next story ID: {next_month:03d}_{next_week:02d}")
+
         publish_date = calculate_publish_date(next_month, next_week, SEASON_START_DATE)
-        logger.info(f"Calculated publish date based on ID {next_month:03d}_{next_week:02d}: {publish_date.strftime('%Y-%m-%d')}")
+        logger.info(f"Calculated publish date: {publish_date.strftime('%Y-%m-%d')}")
 
         # --- Generate Ephergent Stardate for Metadata ---
-        # Format: Cycle MMM.WWW.DDD (Month.Week.Day)
         day_of_week = random.randint(1, 7) # Pick a random day within the week
         ephergent_stardate = f"Cycle {next_month:03d}.{next_week:03d}.{day_of_week:03d}"
         logger.info(f"Generated Ephergent Stardate for metadata: {ephergent_stardate}")
@@ -1789,6 +1795,18 @@ if __name__ == "__main__":
         help="Specify topic for the --auto-generate workflow. Generated if not set."
     )
     parser.add_argument(
+        "--month",
+        type=int,
+        default=None,
+        help="Specify the month number (e.g., 1 for Cycle 001) for generated content. Overrides automatic month calculation."
+    )
+    parser.add_argument(
+        "--week",
+        type=int,
+        default=None,
+        help="Specify the week number (e.g., 1 for Week 01) for generated content. Overrides automatic week calculation."
+    )
+    parser.add_argument(
         "--denizen",
         action="store_true",
         help="Run the 'Today's Dimensional Denizen' generation workflow."
@@ -1849,8 +1867,8 @@ if __name__ == "__main__":
     if args.regenerate:
         if not args.steps:
             parser.error("--regenerate requires --steps to specify which steps to run.")
-        if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.publish_archive or args.set_status or args.status:
-            parser.error("--regenerate cannot be used with other major modes or --set-status/--status.")
+        if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.publish_archive or args.set_status or args.status or args.month or args.week:
+            parser.error("--regenerate cannot be used with other major modes or --set-status/--status/--month/--week.")
         steps_to_run_list = [step.strip().lower() for step in args.steps.split(',') if step.strip()]
         invalid_steps = [s for s in steps_to_run_list if s not in VALID_REGEN_STEPS]
         if invalid_steps:
@@ -1863,15 +1881,19 @@ if __name__ == "__main__":
     elif args.steps:
         parser.error("--steps can only be used with --regenerate.")
     elif args.publish_archive:
-         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.set_status or args.status:
-             parser.error("--publish-archive cannot be used with other major modes or --set-status/--status.")
+         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.set_status or args.status or args.month or args.week:
+             parser.error("--publish-archive cannot be used with other major modes or --set-status/--status/--month/--week.")
     elif args.set_status:
          if not args.status:
              parser.error("--set-status requires --status to specify the desired status ('draft' or 'published').")
-         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.publish_archive:
-             parser.error("--set-status cannot be used with other major modes.")
+         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.publish_archive or args.month or args.week:
+             parser.error("--set-status cannot be used with other major modes or --month/--week.")
     elif args.status:
          parser.error("--status can only be used with --set-status.")
+    elif (args.month is not None or args.week is not None) and not (args.auto_generate or args.denizen):
+        parser.error("--month and --week can only be used with --auto-generate or --denizen.")
+    elif (args.month is None and args.week is not None) or (args.month is not None and args.week is None):
+        parser.error("Both --month and --week must be provided if either is used.")
 
 
     # --- Initialize Archiver (once for the whole run) ---
@@ -1950,6 +1972,13 @@ if __name__ == "__main__":
         denizen_metadata = {}
         denizen_image_prompt_details = []
 
+        # Determine Denizen publish date based on args or current date
+        denizen_month = args.month if args.month is not None else datetime.now().month
+        denizen_week = args.week if args.week is not None else (datetime.now().day - 1) // 7 + 1
+        denizen_publish_date = calculate_publish_date(denizen_month, denizen_week, SEASON_START_DATE)
+        logger.info(f"Denizen publish date: {denizen_publish_date.strftime('%Y-%m-%d')}")
+        denizen_date_prefix = denizen_publish_date.strftime('%Y-%m-%d')
+
         try:
             denizen_data = generate_denizen_profile(denizen_output_dir) # This generates images and saves them in denizen_output_dir/images
             if not denizen_data:
@@ -1958,30 +1987,65 @@ if __name__ == "__main__":
             char_name = denizen_data['name']
             char_backstory = denizen_data['backstory']
             char_details = denizen_data['details']
-            # Paths are already in denizen_data, relative to denizen_output_dir
-            feature_image_path = denizen_data['profile_image_path']
-            article_image_path = denizen_data['action_image_path']
-            filename_base = denizen_data['filename_base'] # Use filename_base from denizen_data
-            denizen_metadata['filename_base'] = filename_base
-            denizen_metadata['location'] = char_details.get('theme', 'Unknown Dimension') # Add dimension to metadata (using 'theme' key from profile_image_generator)
+            
+            # NEW: Generate the new filename_base based on the desired date and character name
+            new_filename_base = f"{denizen_date_prefix}-{sanitize_filename(char_name)}"
+            denizen_metadata['filename_base'] = new_filename_base
 
+            # NEW: Rename the generated image files to match the new filename_base
+            original_profile_image_path = denizen_data['profile_image_path']
+            original_action_image_path = denizen_data['action_image_path']
 
-            if feature_image_path: denizen_artifacts["feature_image"] = feature_image_path
-            if article_image_path: denizen_artifacts["article_images"] = article_image_path
+            new_profile_image_name = f"{new_filename_base}_profile{original_profile_image_path.suffix}"
+            new_action_image_name = f"{new_filename_base}_action{original_action_image_path.suffix}"
 
-            if feature_image_path:
-                denizen_image_prompt_details.append({
-                    "image_type": "featured", "filename": feature_image_path.name,
-                    "prompt": denizen_data.get("profile_image_prompt", "Prompt not available")
-                })
-            if article_image_path:
-                 denizen_image_prompt_details.append({
-                    "image_type": "article", "filename": article_image_path.name, "index": 0,
-                    "prompt": denizen_data.get("action_image_prompt", "Prompt not available")
-                })
+            new_profile_image_path = original_profile_image_path.parent / new_profile_image_name
+            new_action_image_path = original_action_image_path.parent / new_action_image_name
+
+            if original_profile_image_path.exists():
+                original_profile_image_path.rename(new_profile_image_path)
+                logger.info(f"Renamed profile image to: {new_profile_image_path.name}")
+            else:
+                logger.warning(f"Original profile image not found: {original_profile_image_path}")
+                new_profile_image_path = None
+
+            if original_action_image_path.exists():
+                original_action_image_path.rename(new_action_image_path)
+                logger.info(f"Renamed action image to: {new_action_image_path.name}")
+            else:
+                logger.warning(f"Original action image not found: {original_action_image_path}")
+                new_action_image_path = None
+
+            # Update denizen_artifacts with the new paths
+            denizen_artifacts["feature_image"] = new_profile_image_path
+            denizen_artifacts["article_images"] = new_action_image_path
+
+            # Update image_prompt_details with new filenames (if applicable)
+            # This assumes denizen_data['image_prompt_details'] was populated by generate_denizen_profile
+            # and needs its filenames updated. If not, this loop might be empty.
+            if 'image_prompt_details' in denizen_data:
+                for prompt_info in denizen_data['image_prompt_details']:
+                    if prompt_info.get("image_type") == "featured":
+                        prompt_info["filename"] = new_profile_image_name
+                    elif prompt_info.get("image_type") == "article":
+                        prompt_info["filename"] = new_action_image_name
+                denizen_image_prompt_details = denizen_data['image_prompt_details']
+            else:
+                # Fallback if generate_denizen_profile didn't return prompt details
+                if new_profile_image_path:
+                    denizen_image_prompt_details.append({
+                        "image_type": "featured", "filename": new_profile_image_name,
+                        "prompt": denizen_data.get("profile_image_prompt", "Prompt not available")
+                    })
+                if new_action_image_path:
+                    denizen_image_prompt_details.append({
+                        "image_type": "article", "filename": new_action_image_name, "index": 0,
+                        "prompt": denizen_data.get("action_image_prompt", "Prompt not available")
+                    })
+
 
             if denizen_image_prompt_details:
-                prompts_json_path = denizen_output_dir / f"{filename_base}_image_prompts.json"
+                prompts_json_path = denizen_output_dir / f"{new_filename_base}_image_prompts.json" # Use new filename_base
                 try:
                     with open(prompts_json_path, 'w', encoding='utf-8') as f: json.dump(denizen_image_prompt_details, f, indent=2)
                     denizen_artifacts["image_prompts_file"] = prompts_json_path
@@ -2001,7 +2065,7 @@ if __name__ == "__main__":
                 if denizen_audio_text:
                     audio_path = generate_article_audio(
                         reporter=reporter_obj, article_content=denizen_audio_text, title=selected_title,
-                        output_dir=denizen_output_dir, filename_base=filename_base, speed=1.1
+                        output_dir=denizen_output_dir, filename_base=new_filename_base, speed=1.1 # Use new_filename_base
                     )
                     denizen_artifacts["audio"] = audio_path
                 else: logger.warning("Failed to prepare Denizen text for audio.")
@@ -2015,7 +2079,7 @@ if __name__ == "__main__":
                      reporter=reporter_obj, title=selected_title, audio_path=denizen_artifacts["audio"],
                      featured_image_path=denizen_artifacts["feature_image"],
                      article_image_paths=[denizen_artifacts.get("article_images")] if denizen_artifacts.get("article_images") else [],
-                     output_dir=denizen_video_output_dir, filename_base=filename_base
+                     output_dir=denizen_video_output_dir, filename_base=new_filename_base # Use new_filename_base
                  )
                  denizen_artifacts["video"] = denizen_video_path
             else: logger.info("Skipping Denizen Video.")
@@ -2040,9 +2104,9 @@ if __name__ == "__main__":
                 article_image_filename=denizen_artifacts["article_images"].name if denizen_artifacts.get("article_images") else None,
                 audio_filename=denizen_artifacts["audio"].name if denizen_artifacts.get("audio") else None,
                 youtube_video_url=denizen_youtube_url, author=reporter_obj.name, category=category, tags=tags_list,
-                publish_date=datetime.now() # Publish denizens immediately
+                publish_date=denizen_publish_date # Use the calculated publish date
             )
-            markdown_temp_path = denizen_output_dir / f"{filename_base}.md"
+            markdown_temp_path = denizen_output_dir / f"{new_filename_base}.md" # Use new_filename_base
             with open(markdown_temp_path, "w", encoding="utf-8") as f: f.write(pelican_markdown_content)
             denizen_artifacts["markdown"] = markdown_temp_path
 
@@ -2055,7 +2119,7 @@ if __name__ == "__main__":
                      "audio": denizen_artifacts.get("audio")
                  }
                  denizen_pelican_path = export_to_pelican(
-                     markdown_content=pelican_markdown_content, markdown_filename_base=filename_base,
+                     markdown_content=pelican_markdown_content, markdown_filename_base=new_filename_base, # Use new_filename_base
                      media_paths=denizen_media, is_denizen=True
                  )
                  if denizen_pelican_path: denizen_metadata['pelican_path'] = denizen_pelican_path
@@ -2069,13 +2133,13 @@ if __name__ == "__main__":
 
             if "archive" not in steps_to_skip_list and main_archiver and main_archiver.initialized:
                  logger.info("Archiving Denizen Artifacts...")
-                 summary_path = denizen_output_dir / f"{filename_base}_summary.txt"
+                 summary_path = denizen_output_dir / f"{new_filename_base}_summary.txt" # Use new_filename_base
                  with open(summary_path, "w", encoding="utf-8") as f: f.write(summary)
                  denizen_artifacts["summary_file"] = summary_path
                  denizen_article_images_for_archive = [denizen_artifacts.get("article_images")] if denizen_artifacts.get("article_images") else []
                  denizen_artifacts_for_archive = denizen_artifacts.copy()
                  denizen_artifacts_for_archive["article_images"] = denizen_article_images_for_archive
-                 archive_dir = main_archiver.archive_artifacts(filename_base, denizen_artifacts_for_archive)
+                 archive_dir = main_archiver.archive_artifacts(new_filename_base, denizen_artifacts_for_archive) # Use new_filename_base
                  if archive_dir: denizen_metadata['archive_path'] = archive_dir
                  else: logger.warning("Denizen archiving failed.")
             else: logger.info("Skipping Denizen Archiving.")
@@ -2083,10 +2147,10 @@ if __name__ == "__main__":
             if "mail" not in steps_to_skip_list and denizen_pelican_path:
                 logger.info("Sending Denizen Email Notification...")
                 try:
-                    denizen_url = f"{BLOG_URL}/{PELICAN_DENIZENS_SUBDIR}/{filename_base}.html"
+                    denizen_url = f"{BLOG_URL}/{PELICAN_DENIZENS_SUBDIR}/{new_filename_base}.html" # Use new_filename_base
                     denizen_feature_image_url = f"{BLOG_URL}/{PELICAN_IMAGES_SUBDIR}/{denizen_artifacts['feature_image'].name}" if denizen_artifacts.get("feature_image") else f"{BLOG_URL}/theme/images/ephergent_logo.png"
                     email_vars = {
-                        "newsletter_date": datetime.now().strftime("%B %d, %Y"), "article_title": selected_title,
+                        "newsletter_date": denizen_publish_date.strftime("%B %d, %Y"), "article_title": selected_title, # Use denizen_publish_date
                         "article_summary": summary, "article_url": denizen_url,
                         "article_feature_image_url": denizen_feature_image_url,
                     }
@@ -2097,7 +2161,7 @@ if __name__ == "__main__":
             if "social" not in steps_to_skip_list and denizen_pelican_path:
                 logger.info("Posting Denizen to Social Media...")
                 try:
-                    denizen_url = f"{BLOG_URL}/{PELICAN_DENIZENS_SUBDIR}/{filename_base}.html"
+                    denizen_url = f"{BLOG_URL}/{PELICAN_DENIZENS_SUBDIR}/{new_filename_base}.html" # Use new_filename_base
                     post_article_to_social_media(
                         title=selected_title, url=denizen_url, summary=summary,
                         image_path=denizen_artifacts.get("feature_image"), tags=tags_list
@@ -2114,7 +2178,7 @@ if __name__ == "__main__":
 
     elif args.auto_generate:
         # The generative workflow now handles saving to file and calling process_story_from_file
-        run_generative_workflow(args.reporter, args.topic, steps_to_skip_list, main_archiver)
+        run_generative_workflow(args.reporter, args.topic, steps_to_skip_list, main_archiver, args.month, args.week)
 
     else:
         # --- Process Stories from Input Directory (existing logic) ---
