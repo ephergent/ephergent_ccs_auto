@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 PROMPTS_FILE = Path(__file__).parent / 'prompts' / 'personality_prompts.json'
 APP_SCRIPT = Path(__file__).parent / 'app.py'
 
-def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int], generate_denizen: bool):
+def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int], generate_denizen: bool, start_index: int):
     """
     Reads reporter IDs from prompts/personality_prompts.json and runs app.py
     to auto-generate an article for each, skipping all steps except generation.
@@ -51,6 +51,8 @@ def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int
         skip_steps = "audio,git,youtube,archive,export,image,video,social"
         logger.info(f"Skipping steps: {skip_steps}")
 
+        current_article_index = start_index
+
         for reporter in reporters:
             reporter_id = reporter.get('id')
             reporter_name = reporter.get('name', reporter_id) # Use name if available
@@ -81,6 +83,8 @@ def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int
                 command.extend(["--month", str(month)])
             if week is not None:
                 command.extend(["--week", str(week)])
+            # NEW: Add the current article index
+            command.extend(["--index", str(current_article_index)])
 
 
             logger.info(f"Running command: {' '.join(command)}")
@@ -107,6 +111,8 @@ def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int
             except Exception as e:
                 logger.error(f"An unexpected error occurred while processing {reporter_name} (ID: {reporter_id}): {e}", exc_info=True)
 
+            current_article_index += 1 # Increment for the next article
+
         # NEW: Add Denizen generation after all reporters
         if generate_denizen:
             logger.info("\n--- Generating Dimensional Denizen profile ---")
@@ -121,6 +127,8 @@ def generate_articles_for_all_reporters(month: Optional[int], week: Optional[int
                 denizen_command.extend(["--month", str(month)])
             if week is not None:
                 denizen_command.extend(["--week", str(week)])
+            # NEW: Add the current article index for Denizen
+            denizen_command.extend(["--index", str(current_article_index)])
 
             logger.info(f"Running command: {' '.join(denizen_command)}")
             try:
@@ -161,6 +169,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Also generate a Dimensional Denizen profile for the specified date."
     )
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        default=1, # Default to 1 for the first article
+        help="Specify the starting sub-index for generated articles (e.g., 1 for 001_01-01.json)."
+    )
     args = parser.parse_args()
 
     # Basic validation for month/week
@@ -168,4 +182,4 @@ if __name__ == "__main__":
        (args.month is not None and args.week is None):
         parser.error("Both --month and --week must be provided if either is used.")
 
-    generate_articles_for_all_reporters(args.month, args.week, args.denizen)
+    generate_articles_for_all_reporters(args.month, args.week, args.denizen, args.start_index)

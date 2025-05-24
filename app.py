@@ -180,7 +180,7 @@ def get_next_story_id() -> tuple[int, int]:
     logger.info(f"Determining next story ID from directories: {ARCHIVED_STORIES_DIR} and {INPUT_STORIES_DIR_READY}")
     max_month = 0
     max_week = 0
-    pattern = re.compile(r"(\d{3})_(\d{0,2})\.json") # Allow 0 or 2 digits for week
+    pattern = re.compile(r"(\d{3})_(\d{0,2})(?:-\d{2})?\.json") # Allow 0 or 2 digits for week, and optional -XX sub-index
 
     # Combine files from both directories
     all_story_files = []
@@ -1499,7 +1499,21 @@ def process_story_from_file(
         publish_date = process_start_time # Fallback to now
 
     date_prefix = publish_date.strftime('%Y-%m-%d')
-    filename_base = f"{date_prefix}-{safe_title_slug}"
+
+    # Extract index from filename if present (e.g., "001_01-01.json" -> 1)
+    extracted_index = None
+    index_match = re.search(r"-(\d{2})\.json$", story_file_path.name)
+    if index_match:
+        try:
+            extracted_index = int(index_match.group(1))
+        except ValueError:
+            logger.warning(f"Could not parse sub-index from filename {story_file_path.name}. Proceeding without sub-index.")
+
+    # Construct filename_base for artifacts, including the extracted index if available
+    if extracted_index is not None:
+        filename_base = f"{date_prefix}-{safe_title_slug}-{extracted_index:02d}"
+    else:
+        filename_base = f"{date_prefix}-{safe_title_slug}"
 
     current_output_dir = OUTPUT_DIR / f"story_run_{filename_base}" # Use filename_base in temp dir name
     current_output_dir.mkdir(exist_ok=True)
@@ -1568,7 +1582,8 @@ def run_generative_workflow(
     skip_steps: List[str],
     archiver: Archiver,
     month_arg: Optional[int] = None, # NEW PARAMETER
-    week_arg: Optional[int] = None   # NEW PARAMETER
+    week_arg: Optional[int] = None,   # NEW PARAMETER
+    article_index_arg: Optional[int] = None # NEW PARAMETER
     ) -> None:
     """
     Runs the fully automatic content generation workflow.
@@ -1704,7 +1719,11 @@ def run_generative_workflow(
 
 
         # --- Determine Target Filename ---
-        target_filename = f"{next_month:03d}_{next_week:02d}.json"
+        target_filename_base = f"{next_month:03d}_{next_week:02d}"
+        if article_index_arg is not None:
+            target_filename = f"{target_filename_base}-{article_index_arg:02d}.json"
+        else:
+            target_filename = f"{target_filename_base}.json"
         target_file_path = INPUT_STORIES_DIR_READY / target_filename
 
         # Construct the story_data_dict with the correct, flat structure
@@ -1745,7 +1764,7 @@ def run_generative_workflow(
             with open(target_file_path, 'r', encoding='utf-8') as f:
                  reloaded_story_data = json.load(f)
             # Add Month/Week back as they are derived from filename, not always in JSON
-            match = re.match(r"(\d{3})_(\d{0,2})\.json", target_file_path.name)
+            match = re.match(r"(\d{3})_(\d{0,2})(?:-(\d{2}))?\.json", target_file_path.name) # Updated pattern to capture index
             if match:
                  reloaded_story_data['Month'] = int(match.group(1))
                  try:
@@ -1804,6 +1823,12 @@ if __name__ == "__main__":
         type=int,
         default=None,
         help="Specify the week number (e.g., 1 for Week 01) for generated content. Overrides automatic week calculation."
+    )
+    parser.add_argument(
+        "--index",
+        type=int,
+        default=None,
+        help="Specify a sub-index for the generated article (e.g., 1 for 001_01-01.json). Used with --month and --week."
     )
     parser.add_argument(
         "--denizen",
@@ -1866,8 +1891,8 @@ if __name__ == "__main__":
     if args.regenerate:
         if not args.steps:
             parser.error("--regenerate requires --steps to specify which steps to run.")
-        if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.publish_archive or args.set_status or args.status or args.month or args.week:
-            parser.error("--regenerate cannot be used with other major modes or --set-status/--status/--month/--week.")
+        if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.publish_archive or args.set_status or args.status or args.month or args.week or args.index:
+            parser.error("--regenerate cannot be used with other major modes or --set-status/--status/--month/--week/--index.")
         steps_to_run_list = [step.strip().lower() for step in args.steps.split(',') if step.strip()]
         invalid_steps = [s for s in steps_to_run_list if s not in VALID_REGEN_STEPS]
         if invalid_steps:
@@ -1880,19 +1905,21 @@ if __name__ == "__main__":
     elif args.steps:
         parser.error("--steps can only be used with --regenerate.")
     elif args.publish_archive:
-         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.set_status or args.status or args.month or args.week:
-             parser.error("--publish-archive cannot be used with other major modes or --set-status/--status/--month/--week.")
+         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.set_status or args.status or args.month or args.week or args.index:
+             parser.error("--publish-archive cannot be used with other major modes or --set-status/--status/--month/--week/--index.")
     elif args.set_status:
          if not args.status:
              parser.error("--set-status requires --status to specify the desired status ('draft' or 'published').")
-         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.publish_archive or args.month or args.week:
-             parser.error("--set-status cannot be used with other major modes or --month/--week.")
+         if args.skip or args.limit or args.denizen or args.build_memory or args.auto_generate or args.regenerate or args.steps or args.publish_archive or args.month or args.week or args.index:
+             parser.error("--set-status cannot be used with other major modes or --month/--week/--index.")
     elif args.status:
          parser.error("--status can only be used with --set-status.")
-    elif (args.month is not None or args.week is not None) and not (args.auto_generate or args.denizen):
-        parser.error("--month and --week can only be used with --auto-generate or --denizen.")
+    elif (args.month is not None or args.week is not None or args.index is not None) and not (args.auto_generate or args.denizen):
+        parser.error("--month, --week, and --index can only be used with --auto-generate or --denizen.")
     elif (args.month is None and args.week is not None) or (args.month is not None and args.week is None):
         parser.error("Both --month and --week must be provided if either is used.")
+    elif args.index is not None and (args.month is None or args.week is None):
+        parser.error("--index requires both --month and --week to be provided.")
 
 
     # --- Initialize Archiver (once for the whole run) ---
@@ -1988,7 +2015,8 @@ if __name__ == "__main__":
             char_details = denizen_data['details']
             
             # NEW: Generate the new filename_base based on the desired date and character name
-            new_filename_base = f"{denizen_date_prefix}-{sanitize_filename(char_name)}"
+            denizen_index_suffix = f"-{args.index:02d}" if args.index is not None else ""
+            new_filename_base = f"{denizen_date_prefix}-{sanitize_filename(char_name)}{denizen_index_suffix}"
             denizen_metadata['filename_base'] = new_filename_base
 
             # NEW: Rename the generated image files to match the new filename_base
@@ -2177,7 +2205,7 @@ if __name__ == "__main__":
 
     elif args.auto_generate:
         # The generative workflow now handles saving to file and calling process_story_from_file
-        run_generative_workflow(args.reporter, args.topic, steps_to_skip_list, main_archiver, args.month, args.week)
+        run_generative_workflow(args.reporter, args.topic, steps_to_skip_list, main_archiver, args.month, args.week, args.index)
 
     else:
         # --- Process Stories from Input Directory (existing logic) ---
@@ -2204,7 +2232,7 @@ if __name__ == "__main__":
 
         for story_file in files_to_process:
             try:
-                match = re.match(r"(\d{3})_(\d{0,2})\.json", story_file.name) # Use updated pattern
+                match = re.match(r"(\d{3})_(\d{0,2})(?:-(\d{2}))?\.json", story_file.name) # Use updated pattern
                 if not match:
                     logger.warning(f"Skipping file with unexpected name format: {story_file.name}")
                     continue
